@@ -45,14 +45,13 @@ function updateUrl() {
             continue;
         }
         newSearch.set(parameter, paramValue);
-    };
+    }
     const newRelativePathQuery = `${window.location.pathname}?${newSearch.toString()}`;
     history.pushState(null, '', newRelativePathQuery);
 }
 
 function handleDifficulty(difficultyChanged) {
     const {value} = filterInput;
-
     Array.from(contentEl.getElementsByClassName(ACTIVE_CLASS))
         .forEach(swag => swag.classList.remove(ACTIVE_CLASS));
 
@@ -113,7 +112,6 @@ window.addEventListener('load', () => {
 
     if ('URLSearchParams' in window) {
         search = new URLSearchParams(window.location.search);
-
         for (let parameter in parameters) {
             if (search.has(parameter)) {
                 parameters[parameter].setValue(search.get(parameter));
