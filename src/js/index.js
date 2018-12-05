@@ -51,7 +51,7 @@ function updateUrl() {
 }
 
 function handleDifficulty(difficultyChanged) {
-    const { value } = filterInput.value;
+    const {value} = filterInput;
 
     Array.from(contentEl.getElementsByClassName(ACTIVE_CLASS))
         .forEach(swag => swag.classList.remove(ACTIVE_CLASS));
