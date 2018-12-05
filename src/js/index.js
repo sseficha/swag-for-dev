@@ -21,32 +21,16 @@ const allowDifficultySelect = shouldAllow => sortingInput.querySelectorAll('.dif
 
 const parameters = {
     'tags': {
-        action: value => selectr.setValue(value.split(' ')),
-        getValue: () => selectr.getValue().join(' '),
-        setValue: value => { return; }
+        setValue: value => selectr.setValue(value.split(' ')),
+        getValue: () => selectr.getValue().join(' ')
     },
     'difficulty': {
-        action: value => {
-            switch (value.toLowerCase()) {
-                case 'easy':
-                case 'medium':
-                case 'hard':
-                    handleDifficulty(value.toLowerCase());
-                default:
-                    handleDifficulty();
-            }
-        },
+        setValue: value => filterInput.value = ['easy', 'medium', 'difficult'].includes(value) ? value : 'alldifficulties',
         getValue: () => filterInput.value,
-        setValue: value => filterInput.value = value
     },
     'sort': {
-        action: value => {
-            if (value in sort) {
-                handleSort(sort[value]);
-            }
-        },
-        getValue: () => sortingInput.value,
-        setValue: value => sortingInput.value = value
+        setValue: value => sortingInput.value = value in sort ? value : 'ALPHABETICAL_ASCENDING',
+        getValue: () => sortingInput.value
     }
 };
 
@@ -55,17 +39,20 @@ let search, selectr;
 function updateUrl() {
     let newSearch = new URLSearchParams(window.location.search);
     for (let parameter in parameters) {
-        if (parameters[parameter].getValue() === '') {
+        const paramValue = parameters[parameter].getValue();
+        if (paramValue === '') {
             newSearch.delete(parameter);
             continue;
         }
-        newSearch.set(parameter, parameters[parameter].getValue());
+        newSearch.set(parameter, paramValue);
     };
     const newRelativePathQuery = `${window.location.pathname}?${newSearch.toString()}`;
     history.pushState(null, '', newRelativePathQuery);
 }
 
-function handleDifficulty(difficultyChanged = false, value = 'alldifficulties') {
+function handleDifficulty(difficultyChanged) {
+    const { value } = filterInput.value;
+
     Array.from(contentEl.getElementsByClassName(ACTIVE_CLASS))
         .forEach(swag => swag.classList.remove(ACTIVE_CLASS));
 
@@ -89,7 +76,6 @@ function handleTags() {
     const tags = selectr.getValue();
 
     if (!tags.length) {
-        updateUrl();
         return;
     }
 
@@ -99,28 +85,23 @@ function handleTags() {
             el.classList.remove('visible');
         }
     });
-
-    if (!search) {
-        return;
-    }
-
-    updateUrl();
 }
 
-function handleSort(sortValue) {
+function handleSort() {
     Array.from(contentEl.children)
         .map(child => contentEl.removeChild(child))
-        .sort(sortValue)
+        .sort(sort[sortingInput.value])
         .forEach(sortedChild => contentEl.appendChild(sortedChild));
 }
 
 // The cascade is the function which handles calling filtering and sorting swag
 function cascade(force = false) {
-    force |= handleDifficulty(this === filterInput, filterInput.value);
+    force |= handleDifficulty(this === filterInput);
     force |= handleTags(Boolean(this.el));
     if (force || this === sortingInput) {
-        handleSort(sort[sortingInput.value]);
+        handleSort();
     }
+    updateUrl();
 }
 
 window.addEventListener('load', () => {
@@ -135,9 +116,7 @@ window.addEventListener('load', () => {
 
         for (let parameter in parameters) {
             if (search.has(parameter)) {
-                let parameterValue = search.get(parameter);
-                parameters[parameter].action(parameterValue);
-                parameters[parameter].setValue(parameterValue);
+                parameters[parameter].setValue(search.get(parameter));
             }
         }
     }
